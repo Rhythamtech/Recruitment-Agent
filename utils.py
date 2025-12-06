@@ -30,11 +30,11 @@ candidate_evaluation_prompt = PromptTemplate.from_template(
         OUTPUT FORMAT (must be valid JSON, no extra text, no explanations):
 
         {{
-        "score": <float between 0 and 10>,
+        "score": float (0-10),
         "justification": "<max 2 sentences>"
         }}
 
-        REQUIREMENTS:
+        REQUIREMENTS:s
         - Output must be valid JSON only.
         - Do not include commentary outside the JSON block.
         - The justification must be objective and tied directly to the job requirements.
@@ -151,16 +151,19 @@ def extract_candidate_info(resume_url):
     doc = loader.load()
     resume_text = doc[0].page_content
     response = llm_invoke(resume_parse_prompt.format(resume_text=resume_text))
-    return response
+    return extract_json_from_markdown(response)
 
 
-def llm_score(resume_content: str, job_requirements: str) -> dict:    
+def llm_score(resume_content: dict | str, job_requirements: str) -> dict:
+    if isinstance(resume_content, dict):
+        resume_content = json.dumps(resume_content)
+    
     instruction = candidate_evaluation_prompt.format(
         job_requirements=job_requirements,
         resume_json= resume_content)
 
     response = llm_invoke(instruction)
-    return response
+    return extract_json_from_markdown(response)
 
 def mock_zoom_meeting(candidate_email: str) -> dict:
     return {
