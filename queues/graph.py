@@ -1,4 +1,5 @@
 import os
+import datetime
 from dotenv import load_dotenv
 from typing import Literal,TypedDict
 from langgraph.graph import StateGraph, START, END
@@ -46,14 +47,37 @@ def decide(state: EmployeeRecruiterState, threshold: float = 6.0) -> EmployeeRec
     return state
 
 def schedule_interview(state: EmployeeRecruiterState) -> EmployeeRecruiterState:
-    state["meeting_info"] = mock_zoom_meeting(state["parsed_resume"]["contact"]["email"])
+    """
+    As, a sample of business logic. We schedule new interview for the candidate.
+    Every Friday : 1:30 pm IST
+    """
+    time = datetime.datetime.now()
+    
+    days_until_friday = (4 - time.weekday() + 7) % 7  # Friday is 4
+    next_friday = time.date.today() + datetime.timedelta(days=days_until_friday)
+    
+    # Set the meeting time to 1:30 PM IST (UTC+5:30)
+    meeting_time_ist = datetime.datetime.combine(next_friday, datetime.time(13, 30))
+    
+    # Convert to a more general format if needed, or keep as is
+    formatted_time = meeting_time_ist.strftime("%Y-%m-%d %H:%M IST")
+
+
+    state["meeting_info"] = mock_zoom_meeting(email = state["parsed_resume"]["contact"]["email"], 
+                                              name = state["parsed_resume"]["name"], 
+                                              meeting_time=formatted_time)
     state["status"] = "Scheduled interview"
     return state
             
 
 def send_invite(state: EmployeeRecruiterState) -> EmployeeRecruiterState:
     subject = "Interview Invitation"
-    body = f"Hi You are selected for interview, {state['meeting_info']}"
+    meet_details = f"""
+                   Meeting Link: {state['meeting_info']['meeting_link']}
+                   Meeting Time: {state['meeting_info']['meeting_time']}
+                   Meeting ID: {state['meeting_info']['meeting_id']}
+                   """
+    body = f"Hi You are selected for interview, here is your meeting info: {meet_details}"
     receiver_mail = state["parsed_resume"]["contact"]["email"]
     
     state["email_status"] = send_email(candidate_email=receiver_mail, subject=subject, body=body)
@@ -71,7 +95,7 @@ def send_rejection(state: EmployeeRecruiterState) -> EmployeeRecruiterState:
 
 def make_decision(state: EmployeeRecruiterState) -> Literal["schedule", "reject"]:
     if state["decision"] == "schedule":
-        return "schedule"
+        return "invite"
     else:
         return "reject"
             

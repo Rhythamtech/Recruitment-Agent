@@ -1,6 +1,8 @@
 import os
 import re
 import json
+import datetime
+import uuid
 import logging
 import requests
 import tempfile
@@ -135,7 +137,7 @@ def llm_invoke(instruction: str) -> str:
     try:
         from langchain_groq import ChatGroq
         # Using a standard Groq model for reliability
-        model_name = os.getenv("GROQ_MODEL", "llama3-70b-8192")
+        model_name = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
         llm = ChatGroq(model=model_name, temperature=0)
         response = llm.invoke(input=instruction)
         return response.content
@@ -199,13 +201,16 @@ def llm_score(resume_content: Any, job_requirements: str) -> Dict:
     response_content = llm_invoke(instruction)
     return extract_json_from_markdown(response_content)
 
-def mock_zoom_meeting(candidate_email: str) -> Dict:
-    """Generates a mock Zoom meeting payload."""
+def schedule_jitsi_meeting(email: str, name:str, time :str) -> Dict:
+    meet_id = uuid.uuid4().hex[:8]
+    room = f"{name}-Interview_Invite-{meet_id}"
+    link = f"https://meet.jit.si/{room}"
+    
     return {
-        "candidate_email": candidate_email,
-        "meeting_id": "123-456-7890",
-        "meeting_url": "https://zoom.us/j/1234567890",
-        "meeting_time": "2025-11-30T22:21:24+05:30"
+        "candidate_email": email,
+        "meeting_id": meet_id,
+        "meeting_url": link,
+        "meeting_time": time
     }
 
 def send_email(candidate_email: str, subject: str, body: str) -> None:
