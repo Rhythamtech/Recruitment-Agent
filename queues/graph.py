@@ -52,12 +52,20 @@ def schedule_interview(state: EmployeeRecruiterState) -> EmployeeRecruiterState:
             
 
 def send_invite(state: EmployeeRecruiterState) -> EmployeeRecruiterState:
-    state["email_status"] = send_email(candidate_email=state["parsed_resume"]["contact"]["email"], subject="Interview Invitation", body=f"Hi You are selected for interview, {state['meeting_info']}")
+    subject = "Interview Invitation"
+    body = f"Hi You are selected for interview, {state['meeting_info']}"
+    receiver_mail = state["parsed_resume"]["contact"]["email"]
+    
+    state["email_status"] = send_email(candidate_email=receiver_mail, subject=subject, body=body)
     state["status"] = "Sent interview invitation"
     return state
 
 def send_rejection(state: EmployeeRecruiterState) -> EmployeeRecruiterState:
-    state["email_status"] = send_email(candidate_email=state["parsed_resume"]["contact"]["email"], subject="Application Update", body=f"Hi You are not selected for interview")
+    subject = "Application Update"
+    body = "Hi You are not selected for interview"
+    receiver_mail = state["parsed_resume"]["contact"]["email"]
+    
+    state["email_status"] = send_email(candidate_email=receiver_mail, subject=subject, body=body)
     state["status"] = "Sent rejection email"
     return state
 

@@ -11,3 +11,5 @@ wheels/
 .env
 workflow.md 
 graph_backup.py
+worker.log
+

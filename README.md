@@ -100,25 +100,41 @@ Ensure you have the following installed and running:
 
 ### Running the System
 
-The easiest way to start both the API server and the background worker is using the provided script:
+The project includes a **Makefile** and an orchestration script for professional management:
 
+```bash
+# Option 1: Start everything (API + Worker)
+make run
+
+# Option 2: Individually manage services
+make api       # Start FastAPI only
+make worker    # Start RQ Worker only
+```
+
+Alternatively, use the startup script directly:
 ```bash
 chmod +x start.sh
 ./start.sh
 ```
 
-Alternatively, run them separately:
-```bash
-# Terminal 1: RQ Worker
-rq worker -u $REDIS_URL --worker-class rq.SimpleWorker
-
-# Terminal 2: FastAPI Server
-python main.py
-```
-
 ---
 
-## 📋 API Documentation
+## 🛠️ Development & Standards
+
+This project adheres to professional development standards:
+- **Logging**: Integrated Python `logging` throughout for better observability.
+- **Robust Env**: Specialized shell parsing in `start.sh` to handle complex `.env` values.
+- **Clean Code**: Type hinting and structured error handling in all core utilities.
+- **Workflow**: Automated service management with automated cleanup on exit.
+
+### Management Commands
+| Command | Description |
+| :--- | :--- |
+| `make install` | Install all dependencies |
+| `make test` | Run the pytest suite |
+| `make clean` | Remove logs and temporary Python files |
+
+---
 
 ### 1. Synchronous Execution
 Execute the workflow and wait for the final result.
