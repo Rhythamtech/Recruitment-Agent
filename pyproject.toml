@@ -13,5 +13,6 @@ dependencies = [
     "langgraph>=1.0.4",
     "langgraph-checkpoint-mongodb>=0.3.0",
     "pdfminer-six>=20251107",
+    "rq>=2.6.1",
     "uvicorn>=0.38.0",
 ]

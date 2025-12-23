@@ -1,12 +1,13 @@
-from langchain_community.document_loaders import PDFMinerLoader
-from langchain_google_genai import GoogleGenerativeAI
-from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
+
 from dotenv import load_dotenv
 import re
 import json
 from typing import Any
 import os
+import requests
+import tempfile
+
 
 load_dotenv()
 api_key = os.getenv("GOOGLE_API_KEY")
@@ -130,6 +131,7 @@ Rules:
 resume_url = "https://code.ics.uci.edu/wp-content/uploads/2020/06/Resume-Sample-1-Software-Engineer.pdf"
 
 def llm_invoke(instruction: str) -> str:
+    from langchain_groq import ChatGroq
     llm = ChatGroq(model="openai/gpt-oss-20b", temperature=0, max_tokens=None, reasoning_format="parsed")
     response = llm.invoke( input = instruction)
     return response.content
@@ -147,9 +149,25 @@ def llm_invoke(instruction: str) -> str:
 #         return None
 
 def extract_candidate_info(resume_url):
-    loader = PDFMinerLoader(resume_url)
-    doc = loader.load()
-    resume_text = doc[0].page_content
+    from langchain_community.document_loaders import PDFMinerLoader
+    
+    if resume_url.startswith("http"):
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+            response = requests.get(resume_url)
+            tmp.write(response.content)
+            tmp_path = tmp.name
+        
+        try:
+            loader = PDFMinerLoader(tmp_path)
+            doc = loader.load()
+            resume_text = doc[0].page_content
+        finally:
+            os.remove(tmp_path)
+    else:
+        loader = PDFMinerLoader(resume_url)
+        doc = loader.load()
+        resume_text = doc[0].page_content
+
     response = llm_invoke(resume_parse_prompt.format(resume_text=resume_text))
     return extract_json_from_markdown(response)
 
